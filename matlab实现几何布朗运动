@@ -1,0 +1,54 @@
+% 参数设置
+S0 = 100;       % 初始资产价格
+mu = 0.05;      % 预期回报率（漂移率）
+sigma = 0.2;    % 波动率
+T = 1;          % 总时间
+N = 252;        % 时间步数（假设每年252个交易日）
+dt = T / N;     % 每个时间步的长度
+num_paths = 5;  % 模拟路径的数量
+
+% 生成时间步数组
+t = linspace(0, T, N); 
+
+% 初始化资产价格矩阵
+S = zeros(N, num_paths); 
+S(1, :) = S0; % 所有路径的初始资产价格都是 S0
+
+% 创建图形窗口
+figure;
+hold on;
+
+% 创建一个路径图对象，初始化每条路径的图形
+h = gobjects(num_paths, 1);
+
+for j = 1:num_paths
+    % 初始化路径的图形对象
+    h(j) = plot(t(1), S(1, j), 'DisplayName', sprintf('Path %d', j)); 
+end
+
+title('Multiple Geometric Brownian Motion Paths');
+xlabel('Time');
+ylabel('Asset Price');
+xlim([0, T]);
+ylim([min(S0*0.8, 0), S0*1.2]);
+
+% 逐步生成并更新曲线
+for i = 2:N
+    for j = 1:num_paths
+        % 生成随机数，服从标准正态分布
+        Z = randn(1, 1); 
+        
+        % 根据GBM公式计算增量
+        dS = (mu - 0.5 * sigma^2) * dt + sigma * sqrt(dt) * Z;
+        
+        % 更新资产价格
+        S(i, j) = S(i-1, j) * exp(dS);
+        
+        % 更新图形中的数据
+        set(h(j), 'XData', t(1:i), 'YData', S(1:i, j)); 
+    end
+    % 暂停0.05秒，逐步绘制每条路径
+    pause(0.05); 
+end
+
+hold off;
