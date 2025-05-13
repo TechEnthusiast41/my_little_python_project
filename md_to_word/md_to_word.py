@@ -1,0 +1,93 @@
+import tkinter as tk
+from tkinter import filedialog
+import markdown
+import os
+import pypandoc
+from PIL import Image
+import io
+
+def convert_markdown_to_word():
+    """
+    将 Markdown 文件转换为 Word 文档，处理数学公式和图像。
+    允许用户使用 Tkinter GUI 选择输入的 Markdown 文件和输出的 Word 文件。
+    """
+
+    def open_markdown_file():
+        """打开文件对话框以选择 Markdown 文件。"""
+        filepath = filedialog.askopenfilename(
+            title="选择 Markdown 文件",
+            filetypes=[("Markdown 文件", "*.md;*.markdown")]
+        )
+        markdown_file_path.set(filepath)
+
+    def save_word_file():
+        """打开文件对话框以选择输出的 Word 文件。"""
+        filepath = filedialog.asksaveasfilename(
+            title="保存 Word 文件",
+            defaultextension=".docx",
+            filetypes=[("Word 文档", "*.docx")]
+        )
+        word_file_path.set(filepath)
+
+    def perform_conversion():
+        """使用 pypandoc 执行 Markdown 到 Word 的转换。"""
+        md_file = markdown_file_path.get()
+        word_file = word_file_path.get()
+
+        if not md_file or not word_file:
+            status_label.config(text="请选择 Markdown 文件和 Word 文件路径。")
+            return
+
+        try:
+            # 使用 pypandoc 将 Markdown 转换为 Word
+            output = pypandoc.convert_file(
+                md_file, 'docx', format='md', outputfile=word_file,
+                extra_args=['--mathjax']  # 确保处理数学公式
+            )
+
+            if output:
+                status_label.config(text=f"转换失败: {output}")
+            else:
+                status_label.config(text=f"成功将 {md_file} 转换为 {word_file}")
+
+        except Exception as e:
+            status_label.config(text=f"发生错误: {str(e)}")
+
+    # 创建主 Tkinter 窗口
+    root = tk.Tk()
+    root.title("Markdown 到 Word 转换器")
+
+    # 存储文件路径的变量
+    markdown_file_path = tk.StringVar()
+    word_file_path = tk.StringVar()
+
+    # UI 元素
+    markdown_label = tk.Label(root, text="Markdown 文件:")
+    markdown_label.grid(row=0, column=0, padx=5, pady=5, sticky="w")
+    markdown_entry = tk.Entry(root, textvariable=markdown_file_path, width=50)
+    markdown_entry.grid(row=0, column=1, padx=5, pady=5, sticky="ew")
+    markdown_button = tk.Button(root, text="浏览", command=open_markdown_file)
+    markdown_button.grid(row=0, column=2, padx=5, pady=5)
+
+    word_label = tk.Label(root, text="Word 文件:")
+    word_label.grid(row=1, column=0, padx=5, pady=5, sticky="w")
+    word_entry = tk.Entry(root, textvariable=word_file_path, width=50)
+    word_entry.grid(row=1, column=1, padx=5, pady=5, sticky="ew")
+    word_button = tk.Button(root, text="浏览", command=save_word_file)
+    word_button.grid(row=1, column=2, padx=5, pady=5)
+
+    convert_button = tk.Button(root, text="转换", command=perform_conversion)
+    convert_button.grid(row=2, column=1, padx=5, pady=10)
+
+    status_label = tk.Label(root, text="")
+    status_label.grid(row=3, column=0, columnspan=3, padx=5, pady=5)
+
+    # 运行 Tkinter 事件循环
+    root.mainloop()
+
+if __name__ == "__main__":
+    convert_markdown_to_word()
+
+
+#打包指令：pyinstaller --onefile --windowed --icon=write.ico md_to_word.py
+
